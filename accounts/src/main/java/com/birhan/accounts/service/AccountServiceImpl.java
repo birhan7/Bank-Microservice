@@ -5,6 +5,8 @@ import com.birhan.accounts.dto.CustomerDto;
 import com.birhan.accounts.entity.Account;
 import com.birhan.accounts.entity.Customer;
 import com.birhan.accounts.exception.CustomerAlreadyExistsException;
+import com.birhan.accounts.exception.ResourceNotFoundException;
+import com.birhan.accounts.mapper.AccountMapper;
 import com.birhan.accounts.mapper.CustomerMapper;
 import com.birhan.accounts.repository.AccountRepository;
 import com.birhan.accounts.repository.CustomerRepository;
@@ -33,6 +35,15 @@ public class AccountServiceImpl implements IAccountService{
         Customer savedCustomer = customerRepository.save(customer);
         accountRepository.save(createNewAccount(savedCustomer));
 
+    }
+
+    @Override
+    public CustomerDto fetchAccount(String mobileNumber) {
+        Customer customer = customerRepository.findByMobileNumber(mobileNumber).orElseThrow(() -> new ResourceNotFoundException("Customer", "mobileNumber", mobileNumber));
+        Account account = accountRepository.findByCustomerId(customer.getCustomerId()).orElseThrow(()-> new ResourceNotFoundException("Account","mobileNumber", mobileNumber));
+        CustomerDto customerDto = CustomerMapper.toCustomerDto(customer);
+        customerDto.setAccountDto(AccountMapper.toAccountDto(account));
+        return customerDto;
     }
 
     private Account createNewAccount(Customer customer){
